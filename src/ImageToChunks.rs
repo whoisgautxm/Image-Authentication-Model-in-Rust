@@ -24,15 +24,3 @@ pub fn slice_image_into_blocks(image: &ImageBuffer<Rgba<u8>, Vec<u8>>, block_siz
 
     blocks
 }
-
-fn progress_image() {
-    let img = image::open("../msb_image2.png").unwrap().to_rgba8();
-    let block_size = 128;
-    let blocks = slice_image_into_blocks(&img, block_size);
-
-    for (i, block) in blocks.iter().enumerate() {
-        let file_name = format!("block_{}.png", i + 1);
-        block.save(Path::new(&file_name)).unwrap();
-        println!("Saved {}", file_name);
-    }
-}
