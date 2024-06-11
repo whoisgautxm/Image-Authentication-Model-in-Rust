@@ -1,5 +1,6 @@
-use image::{GenericImageView, ImageBuffer, Rgba};
-use std::path::Path;
+extern crate image;
+
+use image::{ImageBuffer, Rgba};
 
 pub fn slice_image_into_blocks(image: &ImageBuffer<Rgba<u8>, Vec<u8>>, block_size: u32) -> Vec<ImageBuffer<Rgba<u8>, Vec<u8>>> {
     let (width, height) = image.dimensions();
