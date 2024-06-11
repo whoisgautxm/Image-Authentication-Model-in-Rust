@@ -8,7 +8,7 @@ use std::path::Path;
 
 type Aes128Ctr = ctr::Ctr128BE<Aes128>;
 
-fn generate_key_nonce() -> (Vec<u8>, Vec<u8>) {
+pub fn generate_key_nonce() -> (Vec<u8>, Vec<u8>) {
     let mut key = vec![0u8; 16];
     let mut nonce = vec![0u8; 16];
     rand::thread_rng().fill_bytes(&mut key);
