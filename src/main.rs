@@ -31,8 +31,8 @@ async fn main() {
         let file_path = Path::new(&file_name);
 
         match upload_to_ipfs(file_path).await {
-            Ok(hash) => println!("Uploaded {} to IPFS with hash: {}", file_name, hash),
-            Err(e) => eprintln!("Failed to upload {} to IPFS: {}", file_name, e),
+            Ok(hash) => println!("Uploaded to IPFS with hash: {}", hash),
+            Err(e) => eprintln!("Error uploading to IPFS: {}", e),
         }
     }
 }
