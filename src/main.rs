@@ -1,12 +1,16 @@
 mod image_to_msb;
 mod image_to_chunks;
 mod block_encryption;
+mod ipfs_upload;
 
 use image_to_msb::extract_msb;
 use image_to_chunks::slice_image_into_blocks;
-use block_encryption::encrypt_and_save_blocks;
+use block_encryption::{encrypt_and_save_blocks, generate_key_nonce};
+use ipfs_upload::upload_to_ipfs;
+use std::path::Path;
 
-fn main() {
+#[tokio::main]
+async fn main() {
     // Extract MSB from original image and create image from MSBs
     let msb_img = extract_msb("/Users/shivanshgupta/Documents/Coding Projects/Image-Authentication-Model-in-Rust/rdr.jpg");
 
@@ -15,9 +19,19 @@ fn main() {
     let blocks = slice_image_into_blocks(&msb_img, block_size);
 
     // Define a key and nonce for AES encryption
-    let key = b"an_example_key_1";
-    let nonce = b"an_example_nonce";
+    let (key, nonce) = generate_key_nonce();
 
     // Encrypt each block and save to file
-    encrypt_and_save_blocks(&blocks, key, nonce);
+    encrypt_and_save_blocks(&blocks, &key, &nonce);
+
+    // Upload encrypted blocks to IPFS and get their hashes
+    for i in 0..blocks.len() {
+        let file_name = format!("block_{}.enc", i + 1);
+        let file_path = Path::new(&file_name);
+
+        match upload_to_ipfs(file_path).await {
+            Ok(hash) => println!("Uploaded to IPFS with hash and block_no{}: {}", i+1, hash),
+            Err(e) => eprintln!("Error uploading to IPFS: {}", e),
+        }
+    }
 }
