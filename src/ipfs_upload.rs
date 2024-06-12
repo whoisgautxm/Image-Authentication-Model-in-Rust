@@ -23,4 +23,5 @@ pub async fn upload_to_ipfs(file_path: &Path) -> Result<String, Error> {
         Ok(res) => Ok(res.hash),
         Err(e) => Err(e),
     }
+    
 }

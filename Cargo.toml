@@ -17,6 +17,7 @@ base64 = "0.13"
 tokio = { version = "1", features = ["full"] }
 ipfs-api = "0.17"
 thiserror="1.0"
+rs_merkle = "1.4"
 
 
 
