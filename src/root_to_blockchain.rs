@@ -1,7 +1,7 @@
 use std::time::{SystemTime, UNIX_EPOCH};
 use rs_merkle::{MerkleTree as RsMerkleTree, algorithms::Sha256 as RsSha256, Hasher};
 use sha2::{Digest, Sha256};
-use std::fmt::Debug;
+use std::fmt::{self, Debug, Formatter};
 use hex;
 
 #[derive(Debug, Clone)]
@@ -103,7 +103,8 @@ impl Node {
         for _ in 0..depth {
             print!("  ");
         }
-        println!("{:?}", self.hash);
+        // println!("{:?}", self.hash);
+        println!("{}", hex::encode(&self.hash));
 
         if let Some(ref left) = self.left {
             left.print(depth + 1);
@@ -115,8 +116,11 @@ impl Node {
 }
 
 impl Debug for Node {
-    fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
-        write!(f, "{:?}", self.hash)
+    // fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
+    //     write!(f, "{:?}", self.hash)
+    // }
+    fn fmt(&self, f: &mut Formatter<'_>) -> fmt::Result {
+        write!(f, "{}", hex::encode(&self.hash))
     }
 }
 
@@ -206,7 +210,9 @@ pub fn calculate_root(leaves: Vec<String>) {
         Some(root) => {
             println!("This is the root node: {:?}", root);
             merkle_tree.print_tree();
-            merkle_tree.traverse(&mut |node| println!("{:?}", node.hash));
+    //  -------------------------------------- Uncomment this line to print the Traversed merkle tree ---------------------------------------      
+            // merkle_tree.traverse(&mut |node| println!("{}", hex::encode(&node.hash)));
+            
             blockchain.add_block(root, leaves)
         }
         None => eprintln!("Couldn't get the merkle root"),
