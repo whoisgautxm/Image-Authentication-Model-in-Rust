@@ -19,7 +19,8 @@ ipfs-api = "0.17"
 thiserror="1.0"
 rs_merkle = "1.4"
 md5 = "0.7.0"
-
+sha256 = "1.0.3"
+miden-crypto = "=0.9.3"
 
 
 

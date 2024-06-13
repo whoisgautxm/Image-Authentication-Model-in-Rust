@@ -13,36 +13,52 @@ use std::path::Path;
 
 #[tokio::main]
 async fn main() {
-    // Extract MSB from original image and create image from MSBs
-    let msb_img = extract_msb("../rdr.jpg");
-
-    // Break the new image into blocks
+    // Define the images to process and their corresponding prefixes
+    let original_image_path = "../image.png";
+    let original_prefix = "original";
+    let deprecated_image_path = "../image1.png";
+    let deprecated_prefix = "deprecated";
     let block_size = 32;
+
+    // Process both images
+    let leaves_original = process_image(original_image_path, block_size, original_prefix).await;
+    let leaves_deprecated = process_image(deprecated_image_path, block_size, deprecated_prefix).await;
+
+    // Calculate Merkle roots
+    let root_original = calculate_root(leaves_original,leaves_deprecated);
+    
+
+}
+
+// Function to process an image: extract MSB, slice into blocks, encrypt, upload to IPFS, and collect hashes
+async fn process_image(image_path: &str, block_size: u32, prefix: &str) -> Vec<String> {
+    // Extract MSB from image and create image from MSBs
+    let msb_img = extract_msb(image_path);
+
+    // Break the image into blocks
     let blocks = slice_image_into_blocks(&msb_img, block_size);
 
     // Define a key and nonce for AES encryption
     let (key, nonce) = generate_key_nonce();
 
-    // Encrypt each block and save to file
-    encrypt_and_save_blocks(&blocks, &key, &nonce);
+    // Encrypt each block and save to file with the given prefix
+    encrypt_and_save_blocks(&blocks, &key, &nonce, prefix);
 
-    // vector for storing hashes of the blocks as leaves
-    let mut leaves:Vec<String> =  Vec::new();
+    // Vector for storing hashes of the blocks as leaves
+    let mut leaves = Vec::new();
 
     // Upload encrypted blocks to IPFS and get their hashes
     for i in 0..blocks.len() {
-        let file_name = format!("block_{}.enc", i + 1);
+        let file_name = format!("{}_block_{}.enc", prefix, i + 1);
         let file_path = Path::new(&file_name);
-    
-
         match upload_to_ipfs(file_path).await {
-            Ok(hash) => {println!("Uploaded to IPFS with hash and block_no{}: {}", i+1, hash);
-            leaves.push(hash)
-        }
+            Ok(hash) => {
+                println!("Uploaded to IPFS with hash and block_no {}: {}", i + 1, hash);
+                leaves.push(hash);
+            }
             Err(e) => eprintln!("Error uploading to IPFS: {}", e),
         }
     }
-    // this function will calculate root of the merkle tree from the leaves
-    calculate_root(leaves);
 
+    leaves
 }

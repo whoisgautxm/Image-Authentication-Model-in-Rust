@@ -28,10 +28,10 @@ pub fn save_to_file(data: &[u8], path: &Path) {
     file.write_all(data).expect("Failed to write data to file");
 }
 
-pub fn encrypt_and_save_blocks(blocks: &[ImageBuffer<Rgba<u8>, Vec<u8>>], key: &[u8], nonce: &[u8]) {
+pub fn encrypt_and_save_blocks(blocks: &[ImageBuffer<Rgba<u8>, Vec<u8>>], key: &[u8], nonce: &[u8], prefix: &str) {
     for (i, block) in blocks.iter().enumerate() {
         let encrypted_block = encrypt_block(block, key, nonce);
-        let file_name = format!("block_{}.enc", i + 1);
+        let file_name = format!("{}_block_{}.enc", prefix, i + 1);
         save_to_file(&encrypted_block, Path::new(&file_name));
         println!("Saved {}", file_name);
     }
