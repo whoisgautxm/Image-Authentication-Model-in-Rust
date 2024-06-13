@@ -14,7 +14,7 @@ use std::path::Path;
 #[tokio::main]
 async fn main() {
     // Extract MSB from original image and create image from MSBs
-    let msb_img = extract_msb("../rdr.jpg");
+    let msb_img = extract_msb("/Users/shivanshgupta/Documents/Coding Projects/Image-Authentication-Model-in-Rust/rdr.jpg");
 
     // Break the new image into blocks
     let block_size = 32;
