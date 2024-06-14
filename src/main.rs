@@ -14,9 +14,9 @@ use std::path::Path;
 #[tokio::main]
 async fn main() {
     // Define the images to process and their corresponding prefixes
-    let original_image_path = "../image.png";
+    let original_image_path = "/Users/shivanshgupta/Documents/Coding Projects/Image-Authentication-Model-in-Rust/image.png";
     let original_prefix = "original";
-    let deprecated_image_path = "../image1.png";
+    let deprecated_image_path = "/Users/shivanshgupta/Documents/Coding Projects/Image-Authentication-Model-in-Rust/image1.png";
     let deprecated_prefix = "fake";
     let block_size = 32;
 
@@ -39,7 +39,7 @@ async fn process_image(image_path: &str, block_size: u32, prefix: &str) -> Vec<S
     let blocks = slice_image_into_blocks(&msb_img, block_size);
 
     // Define a key and nonce for AES encryption
-    let (key, nonce) = derive_key_nonce_from_image(&msb_img);
+    // let (key, nonce) = derive_key_nonce_from_image(&msb_img);
 
     // Encrypt each block and save to file with the given prefix
     encrypt_and_save_blocks_with_derived_keys(&blocks, prefix);
@@ -53,7 +53,7 @@ async fn process_image(image_path: &str, block_size: u32, prefix: &str) -> Vec<S
         let file_path = Path::new(&file_name);
         match upload_to_ipfs(file_path).await {
             Ok(hash) => {
-                println!("Uploaded to IPFS with hash and block_no {}: {}", i + 1, hash);
+                println!("Uploaded to IPFS with Block_no and Hash {}: {}", i + 1, hash);
                 leaves.push(hash);
             }
             Err(e) => eprintln!("Error uploading to IPFS: {}", e),
