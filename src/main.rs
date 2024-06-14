@@ -2,15 +2,18 @@ mod image_to_msb;
 mod image_to_chunks;
 mod block_encryption;
 mod ipfs_upload;
-mod root_to_blockchain;
+mod merkle_tree;
+mod blockchain;
+mod image_verification;
 
 use image_to_msb::extract_msb;
 use image_to_chunks::slice_image_into_blocks;
 use block_encryption::{encrypt_and_save_blocks_with_derived_keys, derive_key_nonce_from_image};
-use root_to_blockchain::calculate_root;
+use merkle_tree::{insert_root,build_fake_tree,build_original_tree,MerkleTree};
 use ipfs_upload::upload_to_ipfs;
+use blockchain::{Blockchain,return_transction};
+use image_verification::image_verification;
 use std::path::Path;
-
 #[tokio::main]
 async fn main() {
     // Define the images to process and their corresponding prefixes
@@ -24,10 +27,27 @@ async fn main() {
     let leaves_original = process_image(original_image_path, block_size, original_prefix).await;
     let leaves_fake = process_image(deprecated_image_path, block_size, deprecated_prefix).await;
 
-    // Calculate Merkle roots
-    calculate_root(leaves_original,leaves_fake);
+    // this will initialize a blockchain
+    let mut blockchain = Blockchain::new();
+
+    //insert leaves_original in the Transction of the blockchain
+    insert_root(leaves_original, &mut blockchain);
+
+    // Calculate fake merkle tree and return it
+    let fake_merkle_tree = build_fake_tree(leaves_fake);
 
 
+    //to get the transction of the block first we have to calculate the hash of the header
+    let last_block_hash = blockchain::calculate_hash(&blockchain.chain.last().unwrap().header);
+
+    //return leaves of the original image
+    let original_transctions = return_transction(&blockchain,&last_block_hash);
+
+    //merkle tree from original leaves
+    let original_merkle_tree = build_original_tree(original_transctions);
+
+
+    image_verification(fake_merkle_tree,original_merkle_tree);
 }
 
 // Function to process an image: extract MSB, slice into blocks, encrypt, upload to IPFS, and collect hashes
