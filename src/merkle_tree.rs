@@ -1,86 +1,9 @@
+// src/merkle_tree.rs
+use crate::{Blockchain};
 use std::time::{SystemTime, UNIX_EPOCH};
 use sha2::{Digest, Sha256};
 use std::fmt::{self, Debug, Formatter};
 use hex;
-
-#[derive(Debug, Clone)]
-pub struct Blockchain {
-    chain: Vec<Block>,
-}
-
-#[derive(Debug, Clone)]
-pub struct Block {
-    pub header: Header,
-    pub transaction: Transaction,
-}
-
-#[derive(Debug, Clone)]
-pub struct Header {
-    version: u32,
-    prev_blockhash: String,
-    merkle_root: String,
-    time: u32,
-    nonce: u32,
-}
-
-#[derive(Debug, Clone)]
-pub struct Transaction {
-    tx: Vec<String>,
-}
-
-impl Blockchain {
-    pub fn new() -> Blockchain {
-        let genesis_block = Block {
-            header: Header {
-                version: 1,
-                prev_blockhash: "0".to_string(),
-                merkle_root: "0".to_string(),
-                time: SystemTime::now().duration_since(UNIX_EPOCH).unwrap().as_secs() as u32,
-                nonce: 0,
-            },
-            transaction: Transaction {
-                tx: vec![],
-            },
-        };
-        Blockchain {
-            chain: vec![genesis_block],
-        }
-    }
-
-    pub fn add_block(&mut self, merkle_root: String, transactions: Vec<String>) {
-        let prev_block = self.chain.last().unwrap();
-        let prev_blockhash = calculate_hash(&prev_block.header);
-
-        let new_block = Block {
-            header: Header {
-                version: 1,
-                prev_blockhash,
-                merkle_root,
-                time: SystemTime::now().duration_since(UNIX_EPOCH).unwrap().as_secs() as u32,
-                nonce: 0,
-            },
-            transaction: Transaction {
-                tx: transactions,
-            },
-        };
-        self.chain.push(new_block);
-    }
-
-    fn print_blockchain(&self) {
-        for block in &self.chain {
-            println!("{:?}", block);
-        }
-    }
-}
-
-pub fn calculate_hash(header: &Header) -> String {
-    // Simple hash function for example purposes
-    let header_string = format!(
-        "{}{}{}{}{}",
-        header.version, header.prev_blockhash, header.merkle_root, header.time, header.nonce
-    );
-    format!("{:x}", md5::compute(header_string))
-}
 
 #[derive(Clone)]
 struct Node {
@@ -119,12 +42,12 @@ impl Debug for Node {
     }
 }
 
-struct MerkleTree {
-    root: Option<Node>,
+pub struct MerkleTree {
+    pub root: Option<Node>,
 }
 
 impl MerkleTree {
-    fn new(data: Vec<&str>) -> Self {
+    pub fn new(data: Vec<&str>) -> Self {
         let leaves: Vec<Node> = data
             .into_iter()
             .map(|datum| {
@@ -166,13 +89,13 @@ impl MerkleTree {
         nodes.into_iter().next()
     }
 
-    fn print_tree(&self) {
+    pub fn print_tree(&self) {
         if let Some(ref root) = self.root {
             root.print(0);
         }
     }
 
-    fn traverse(&self, callback: &mut dyn FnMut(&Node)) {
+    pub fn traverse(&self, callback: &mut dyn FnMut(&Node)) {
         if let Some(ref root) = self.root {
             Self::traverse_node(root, callback);
         }
@@ -190,11 +113,11 @@ impl MerkleTree {
         }
     }
 
-    fn root_hex(&self) -> Option<String> {
+    pub fn root_hex(&self) -> Option<String> {
         self.root.as_ref().map(|node| hex::encode(&node.hash))
     }
 
-    fn size(&self) -> usize {
+    pub fn size(&self) -> usize {
         let mut count = 0;
         self.traverse(&mut |_| count += 1);
         count
@@ -220,35 +143,36 @@ fn compare_nodes(node1: &Option<Node>, node2: &Option<Node>, ri: &mut Vec<u32>) 
     }
 }
 
-fn ri_array(original_merkle: &MerkleTree, fake_merkle: &MerkleTree) -> Vec<u32> {
+pub fn ri_array(original_merkle: &MerkleTree, fake_merkle: &MerkleTree) -> Vec<u32> {
     let mut ri = Vec::new();
     compare_nodes(&original_merkle.root, &fake_merkle.root, &mut ri);
     ri
 }
 
-pub fn calculate_root(leaves_original: Vec<String>, leaves_fake: Vec<String>) {
-    let mut blockchain = Blockchain::new();
-
+pub fn insert_root(leaves_original: Vec<String>, blockchain: &mut Blockchain) {
     let leaves_as_str_original: Vec<&str> = leaves_original.iter().map(|s| s.as_str()).collect();
-    let leaves_as_str_fake: Vec<&str> = leaves_fake.iter().map(|s| s.as_str()).collect();
-    
     let merkle_tree = MerkleTree::new(leaves_as_str_original.clone());
-    let fake_merkle_tree = MerkleTree::new(leaves_as_str_fake.clone());
 
     match merkle_tree.root_hex() {
         Some(root) => {
             println!("This is the root node: {:?}", root);
             merkle_tree.print_tree();
-            // Uncomment this line to print the Traversed merkle tree
             merkle_tree.traverse(&mut |node| println!("{}", hex::encode(&node.hash)));
-            
-            let ri = ri_array(&merkle_tree, &fake_merkle_tree);
-            println!("Tampered result array: {:?}", ri);
-            
+
             blockchain.add_block(root, leaves_original)
         }
         None => eprintln!("Couldn't get the merkle root"),
     }
+}
 
-    blockchain.print_blockchain();
+pub fn build_original_tree(leaves_original: Vec<String>) -> MerkleTree {
+    let leaves_as_str_original: Vec<&str> = leaves_original.iter().map(|s| s.as_str()).collect();
+    let merkle_tree = MerkleTree::new(leaves_as_str_original.clone());
+    merkle_tree
+}
+
+pub fn build_fake_tree(leaves_fake: Vec<String>) -> MerkleTree {
+    let leaves_as_str_fake: Vec<&str> = leaves_fake.iter().map(|s| s.as_str()).collect();
+    let fake_merkle_tree = MerkleTree::new(leaves_as_str_fake.clone());
+    fake_merkle_tree
 }
