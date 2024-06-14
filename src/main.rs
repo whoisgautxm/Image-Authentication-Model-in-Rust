@@ -8,7 +8,7 @@ mod image_verification;
 
 use image_to_msb::extract_msb;
 use image_to_chunks::slice_image_into_blocks;
-use block_encryption::{encrypt_and_save_blocks_with_derived_keys, derive_key_nonce_from_image};
+use block_encryption::encrypt_and_save_blocks_with_derived_keys;
 use merkle_tree::{insert_root,build_fake_tree,build_original_tree,MerkleTree};
 use ipfs_upload::upload_to_ipfs;
 use blockchain::{Blockchain,return_transction};
@@ -21,7 +21,7 @@ async fn main() {
     let original_prefix = "original";
     let deprecated_image_path = "/Users/shivanshgupta/Documents/Coding Projects/Image-Authentication-Model-in-Rust/image1.png";
     let deprecated_prefix = "fake";
-    let block_size = 32;
+    let block_size = 64;
 
     // Process both images
     let leaves_original = process_image(original_image_path, block_size, original_prefix).await;
@@ -51,6 +51,7 @@ async fn main() {
 }
 
 // Function to process an image: extract MSB, slice into blocks, encrypt, upload to IPFS, and collect hashes
+
 async fn process_image(image_path: &str, block_size: u32, prefix: &str) -> Vec<String> {
     // Extract MSB from image and create image from MSBs
     let msb_img = extract_msb(image_path);
