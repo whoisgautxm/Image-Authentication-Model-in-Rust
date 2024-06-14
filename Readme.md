@@ -15,21 +15,21 @@
 
 ## Steps to Verify Image Authenticity
 
-- [ ] **Input: Unverified Image Iunv**
-- [ ] **Output: Set of the tampered result Ri = (r1, r2, ..., rn)**
+- [x] **Input: Unverified Image Iunv**
+- [x] **Output: Set of the tampered result Ri = (r1, r2, ..., rn)**
   ![alt text](image.png)
 
 ### Steps:
 
-1. [ ] **Generate Merkle tree Munv of Iunv** by using the Merkle tree generation method (refer to Section 3.1).
-2. [ ] **Retrieve Morg** corresponding to the original image from the blockchain.
-3. [ ] **Check the size of Morg and Munv Merkle trees:**
-   - [ ] If both have the same size, then go to Step 4.
-   - [ ] Else, set each ri to 1 and stop the procedure.
-4. [ ] **Compare Morg and Munv recursively from root to the tree left:**
-   - [ ] Check left side child hashes followed by right side child hashes.
-   - [ ] If the node matches, set the value of ri to 0.
-   - [ ] If the node does not match:
-     - [ ] If it is the bottom node of the Merkle tree, set the value of ri corresponding to the node to 1.
-     - [ ] Else, compare the child nodes.
-5. [ ] **Repeat Step 4** until all nodes have been checked.
+1. [x] **Generate Merkle tree Munv of Iunv** by using the Merkle tree generation method (refer to Section 3.1).
+2. [x] **Retrieve Morg** corresponding to the original image from the blockchain.
+3. [x] **Check the size of Morg and Munv Merkle trees:**
+   - [x] If both have the same size, then go to Step 4.
+   - [x] Else, set each ri to 1 and stop the procedure.
+4. [x] **Compare Morg and Munv recursively from root to the tree left:**
+   - [x] Check left side child hashes followed by right side child hashes.
+   - [x] If the node matches, set the value of ri to 0.
+   - [x] If the node does not match:
+     - [x] If it is the bottom node of the Merkle tree, set the value of ri corresponding to the node to 1.
+     - [x] Else, compare the child nodes.
+5. [x] **Repeat Step 4** until all nodes have been checked.
