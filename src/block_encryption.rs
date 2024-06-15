@@ -1,12 +1,13 @@
+use aes::cipher::{KeyIvInit, StreamCipher};
 use aes::Aes128;
-use ctr::cipher::{KeyIvInit, StreamCipher};
+use ctr::Ctr128BE;
 use image::{ImageBuffer, Rgba};
-use sha2::{Sha256, Digest};
+use sha2::{Digest, Sha256};
 use std::fs::File;
 use std::io::Write;
 use std::path::Path;
 
-type Aes128Ctr = ctr::Ctr128BE<Aes128>;
+type Aes128Ctr = Ctr128BE<Aes128>;
 
 // Function to derive key and nonce from image data
 pub fn derive_key_nonce_from_image(image: &ImageBuffer<Rgba<u8>, Vec<u8>>) -> (Vec<u8>, Vec<u8>) {
@@ -17,6 +18,7 @@ pub fn derive_key_nonce_from_image(image: &ImageBuffer<Rgba<u8>, Vec<u8>>) -> (V
     let nonce = result[16..32].to_vec();
     (key, nonce)
 }
+
 pub fn encrypt_block(block: &ImageBuffer<Rgba<u8>, Vec<u8>>, key: &[u8], nonce: &[u8]) -> Vec<u8> {
     let mut cipher = Aes128Ctr::new(key.into(), nonce.into());
     let mut block_data = block.as_raw().clone();
@@ -39,14 +41,16 @@ pub fn encrypt_and_save_blocks_with_derived_keys(blocks: &[ImageBuffer<Rgba<u8>,
     }
 }
 
-pub fn decrypt_block(data: &[u8], key: &[u8], nonce: &[u8]) -> ImageBuffer<Rgba<u8>, Vec<u8>> {
+pub fn decrypt_block(data: &[u8], key: &[u8], nonce: &[u8], block_size: u32) -> ImageBuffer<Rgba<u8>, Vec<u8>> {
     let mut cipher = Aes128Ctr::new(key.into(), nonce.into());
     let mut decrypted_data = data.to_vec();
     cipher.apply_keystream(&mut decrypted_data);
 
-    // Assuming block size is known
-    let block_size = (decrypted_data.len() as f64).sqrt() as u32;
     let mut block = ImageBuffer::new(block_size, block_size);
-    block.copy_from_slice(&decrypted_data);
+    for (i, pixel) in decrypted_data.chunks(4).enumerate() {
+        let x = (i as u32) % block_size;
+        let y = (i as u32) / block_size;
+        block.put_pixel(x, y, Rgba([pixel[0], pixel[1], pixel[2], pixel[3]]));
+    }
     block
 }

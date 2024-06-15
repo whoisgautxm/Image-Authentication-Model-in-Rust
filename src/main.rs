@@ -23,7 +23,7 @@ async fn main() {
     let original_prefix = "original";
     let deprecated_image_path = "/Users/shivanshgupta/Documents/Coding Projects/Image-Authentication-Model-in-Rust/image1.png";
     let deprecated_prefix = "fake";
-    let block_size = 64;
+    let block_size = 128;
 
     // Process both images
     let leaves_original = process_image(original_image_path, block_size, original_prefix).await;
@@ -54,7 +54,7 @@ async fn main() {
     let restored_image = restore_tampered_blocks(original_image_path, &leaves_original, &ri, block_size).await;
 
     // Save the restored image
-    restored_image.save("/path/to/restored_image.png").expect("Failed to save restored image");
+    restored_image.save("/Users/shivanshgupta/Documents/Coding Projects/Image-Authentication-Model-in-Rust/image4.png").expect("Failed to save restored image");
 }
 
 // Function to process an image: extract MSB, slice into blocks, encrypt, upload to IPFS, and collect hashes
@@ -88,9 +88,12 @@ async fn process_image(image_path: &str, block_size: u32, prefix: &str) -> Vec<S
 }
 
 // Function to restore tampered blocks
-async fn restore_tampered_blocks(original_image_path: &str, leaves_original: &[String], ri: &[u32], block_size: u32) -> ImageBuffer<Rgba<u8>, Vec<u8>> {
+async fn restore_tampered_blocks(original_image_path: &str, leaves_original: &[String], ri: &Vec<u32>, block_size: u32) -> ImageBuffer<Rgba<u8>, Vec<u8>> {
     // Load the original image
     let original_image = image::open(original_image_path).expect("Failed to open original image");
+
+    // Convert DynamicImage to ImageBuffer<Rgba<u8>, Vec<u8>>
+    let original_image_buffer = original_image.to_rgba8();
     let (width, height) = original_image.dimensions();
     let mut restored_image = ImageBuffer::new(width, height);
 
@@ -102,7 +105,8 @@ async fn restore_tampered_blocks(original_image_path: &str, leaves_original: &[S
 
             // Download and decrypt the file from IPFS
             let encrypted_block = download_file_from_ipfs(tx_hash).await.expect("Failed to download from IPFS");
-            let decrypted_block = decrypt_block(&encrypted_block).expect("Failed to decrypt block");
+            let (key,nounce) = block_encryption::derive_key_nonce_from_image(&original_image_buffer);
+            let decrypted_block = decrypt_block(&encrypted_block,&key,&nounce,block_size);
 
             // Calculate the position of the block in the image
             let x = (i as u32 % (width / block_size)) * block_size;
