@@ -17,9 +17,9 @@ use std::path::Path;
 #[tokio::main]
 async fn main() {
     // Define the images to process and their corresponding prefixes
-    let original_image_path = "/Users/shivanshgupta/Documents/Coding Projects/Image-Authentication-Model-in-Rust/image.png";
+    let original_image_path = "../image.png";
     let original_prefix = "original";
-    let deprecated_image_path = "/Users/shivanshgupta/Documents/Coding Projects/Image-Authentication-Model-in-Rust/image1.png";
+    let deprecated_image_path = "../image2.jpg";
     let deprecated_prefix = "fake";
     let block_size = 64;
 
