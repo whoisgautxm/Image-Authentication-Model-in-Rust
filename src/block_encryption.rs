@@ -38,3 +38,15 @@ pub fn encrypt_and_save_blocks_with_derived_keys(blocks: &[ImageBuffer<Rgba<u8>,
         println!("Saved {}", file_name);
     }
 }
+
+pub fn decrypt_block(data: &[u8], key: &[u8], nonce: &[u8]) -> ImageBuffer<Rgba<u8>, Vec<u8>> {
+    let mut cipher = Aes128Ctr::new(key.into(), nonce.into());
+    let mut decrypted_data = data.to_vec();
+    cipher.apply_keystream(&mut decrypted_data);
+
+    // Assuming block size is known
+    let block_size = (decrypted_data.len() as f64).sqrt() as u32;
+    let mut block = ImageBuffer::new(block_size, block_size);
+    block.copy_from_slice(&decrypted_data);
+    block
+}

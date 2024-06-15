@@ -85,7 +85,7 @@ pub fn calculate_hash(header: &Header) -> String {
     );
     format!("{:x}", md5::compute(header_string))
 }
-pub fn return_transction(blockchain:&Blockchain, block_hash: &str) -> Vec<String> {
+pub fn return_transaction(blockchain:&Blockchain, block_hash: &str) -> Vec<String> {
     for block in &blockchain.chain {
         if calculate_hash(&block.header) == block_hash {
             return block.transaction.tx.clone();

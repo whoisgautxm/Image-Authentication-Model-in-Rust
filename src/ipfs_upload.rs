@@ -5,6 +5,7 @@ use std::fs::File;
 use std::path::Path;
 use ipfs_api::Error;
 use ipfs_api::IpfsApi;
+use futures::TryStreamExt;
 
 
 // Function to upload a file to IPFS and get the hash
@@ -24,4 +25,15 @@ pub async fn upload_to_ipfs(file_path: &Path) -> Result<String, Error> {
         Err(e) => Err(e),
     }
     
+}
+
+pub async fn download_file_from_ipfs(hash: &str) -> Result<Vec<u8>, ipfs_api::Error> {
+    let client = IpfsClient::default();
+    
+    let result = client.cat(hash)
+        .map_ok(|chunk| chunk.to_vec())
+        .try_concat()
+        .await?;
+
+    Ok(result)
 }
