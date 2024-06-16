@@ -94,7 +94,7 @@ async fn restore_tampered_blocks(original_image_path: &str, leaves_original: &[S
 
     // Convert DynamicImage to ImageBuffer<Rgba<u8>, Vec<u8>>
     let original_image_buffer = original_image.to_rgba8();
-    let (width, height) = original_image.dimensions();
+    let (width, height) = original_image_buffer.dimensions();
     let mut restored_image = ImageBuffer::new(width, height);
 
     // Define transparent red color
