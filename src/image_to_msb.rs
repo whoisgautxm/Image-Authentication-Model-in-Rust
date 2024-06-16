@@ -28,6 +28,6 @@ pub fn extract_msb(img_path: &str) -> ImageBuffer<Rgba<u8>, Vec<u8>> {
         // Put the new pixel into the MSB image buffer
         msb_img.put_pixel(x, y, msb_pixel);
     }
-
+    msb_img.save("../msb_image.jpeg");
     msb_img
 }
