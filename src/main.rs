@@ -8,7 +8,7 @@ mod image_verification;
 
 use image_to_msb::extract_msb;
 use image_to_chunks::slice_image_into_blocks;
-use block_encryption::{encrypt_and_save_blocks_with_derived_keys, decrypt_block};
+use block_encryption::{encrypt_and_save_blocks_with_derived_keys, decrypt_block,save_to_file};
 use merkle_tree::{insert_root, build_fake_tree, build_original_tree, MerkleTree};
 use ipfs_upload::{upload_to_ipfs, download_file_from_ipfs};
 use blockchain::{Blockchain, return_transaction};
@@ -94,7 +94,7 @@ async fn restore_tampered_blocks(original_image_path: &str, leaves_original: &[S
 
     // Convert DynamicImage to ImageBuffer<Rgba<u8>, Vec<u8>>
     let original_image_buffer = original_image.to_rgba8();
-    let (width, height) = original_image.dimensions();
+    let (width, height) = original_image_buffer.dimensions();
     let mut restored_image = ImageBuffer::new(width, height);
 
     // Iterate over the `ri` array
@@ -105,8 +105,12 @@ async fn restore_tampered_blocks(original_image_path: &str, leaves_original: &[S
 
             // Download and decrypt the file from IPFS
             let encrypted_block = download_file_from_ipfs(tx_hash).await.expect("Failed to download from IPFS");
-            let (key,nounce) = block_encryption::derive_key_nonce_from_image(&original_image_buffer);
-            let decrypted_block = decrypt_block(&encrypted_block,&key,&nounce,block_size);
+            let (key, nonce) = block_encryption::derive_key_nonce_from_image(&original_image_buffer);
+            let decrypted_block = decrypt_block(&encrypted_block, &key, &nonce, block_size);
+            
+            // Save decrypted block for debugging
+            let file_name = format!("Decrypted_block_{}.png", i + 1);
+            decrypted_block.save(&file_name).expect("Failed to save decrypted block");
 
             // Calculate the position of the block in the image
             let x = (i as u32 % (width / block_size)) * block_size;

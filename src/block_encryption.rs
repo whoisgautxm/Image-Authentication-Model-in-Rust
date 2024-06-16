@@ -15,7 +15,8 @@ pub fn derive_key_nonce_from_image(image: &ImageBuffer<Rgba<u8>, Vec<u8>>) -> (V
     hasher.update(image.as_raw());
     let result = hasher.finalize();
     let key = result[0..16].to_vec();
-    let nonce = result[16..32].to_vec();
+    let nonce = result[16..32].to_vec(); // Using 12 bytes for nonce as recommended for AES-GCM
+    println!("Key: {:x?}, Nonce: {:x?}", key, nonce); // Debugging info
     (key, nonce)
 }
 
@@ -23,6 +24,7 @@ pub fn encrypt_block(block: &ImageBuffer<Rgba<u8>, Vec<u8>>, key: &[u8], nonce: 
     let mut cipher = Aes128Ctr::new(key.into(), nonce.into());
     let mut block_data = block.as_raw().clone();
     cipher.apply_keystream(&mut block_data);
+    println!("Encrypted Block Data: {:x?}", &block_data[..16]); // Debugging info
     block_data
 }
 
@@ -45,6 +47,7 @@ pub fn decrypt_block(data: &[u8], key: &[u8], nonce: &[u8], block_size: u32) -> 
     let mut cipher = Aes128Ctr::new(key.into(), nonce.into());
     let mut decrypted_data = data.to_vec();
     cipher.apply_keystream(&mut decrypted_data);
+    println!("Decrypted Block Data: {:x?}", &decrypted_data[..16]); // Debugging info
 
     let mut block = ImageBuffer::new(block_size, block_size);
     for (i, pixel) in decrypted_data.chunks(4).enumerate() {
