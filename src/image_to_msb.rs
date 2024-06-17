@@ -28,7 +28,7 @@ pub fn extract_msb(img_path: &str) -> ImageBuffer<Rgba<u8>, Vec<u8>> {
         // Put the new pixel into the MSB image buffer
         msb_img.put_pixel(x, y, msb_pixel);
     }
-    msb_img.save("/Users/shivanshgupta/Documents/Coding Projects/Image-Authentication-Model-in-Rust/msb_img.jpg");
+    msb_img.save("../msb_img.jpg");
     msb_img
 }
 
@@ -57,6 +57,6 @@ pub fn convert_msb_to_normal(msb_img: &ImageBuffer<Rgba<u8>, Vec<u8>>) -> ImageB
         // Put the new pixel into the normal image buffer
         normal_img.put_pixel(x, y, normal_pixel);
     }
-    normal_img.save("/Users/shivanshgupta/Documents/Coding Projects/Image-Authentication-Model-in-Rust/normal_img.jpg");
+    normal_img.save("../normal_img.jpg");
     normal_img
 }

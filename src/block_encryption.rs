@@ -33,20 +33,38 @@ pub fn encrypt_and_save_blocks(blocks: &[ImageBuffer<Rgba<u8>, Vec<u8>>], prefix
         let encrypted_block = encrypt_block(block, key);
         let file_name = format!("{}_block_{}.enc", prefix, i + 1);
         save_to_file(&encrypted_block, Path::new(&file_name));
+        
+        // Calculate and print hash for debugging
+        let mut hasher = Sha256::new();
+        hasher.update(&encrypted_block);
+        let hash = hasher.finalize();
+        println!("Block {}: Encrypted hash: {}", i + 1, hex::encode(hash));
+
         println!("Saved {}", file_name);
     }
 }
 
 pub fn decrypt_block(data: &[u8], block_size: u32) -> ImageBuffer<Rgba<u8>, Vec<u8>> {
     let key = 0xAA; // Example key for XOR decryption
+
+    // Perform XOR decryption
     let mut decrypted_data = data.to_vec();
     xor_cipher(&mut decrypted_data, key);
 
+    // Reconstruct the image buffer from decrypted data
     let mut block = ImageBuffer::new(block_size, block_size);
     for (i, pixel) in decrypted_data.chunks(4).enumerate() {
         let x = (i as u32) % block_size;
         let y = (i as u32) / block_size;
-        block.put_pixel(x, y, Rgba([pixel[0], pixel[1], pixel[2], pixel[3]]));
+        
+        // Ensure bounds checking for pixel data
+        if let [r, g, b, a] = pixel {
+            block.put_pixel(x, y, Rgba([*r, *g, *b, *a]));
+        } else {
+            // Handle unexpected chunk size
+            eprintln!("Unexpected chunk size during pixel reconstruction.");
+        }
     }
     block
 }
+

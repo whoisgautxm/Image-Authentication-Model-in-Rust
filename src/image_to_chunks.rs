@@ -25,3 +25,9 @@ pub fn slice_image_into_blocks(image: &ImageBuffer<Rgba<u8>, Vec<u8>>, block_siz
 
     blocks
 }
+
+pub fn save_blocks(blocks:Vec<ImageBuffer<Rgba<u8>, Vec<u8>>>,prefix:&str){
+    for (i,block) in blocks.iter().enumerate(){
+        block.save(format!("{}{}.jpg",prefix,i)).unwrap();
+    }
+}

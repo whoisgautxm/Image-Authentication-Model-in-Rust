@@ -7,23 +7,25 @@ mod blockchain;
 mod image_verification;
 
 use image_to_msb::{extract_msb, convert_msb_to_normal};
-use image_to_chunks::slice_image_into_blocks;
+use image_to_chunks::{slice_image_into_blocks,save_blocks};
 use block_encryption::{encrypt_and_save_blocks, decrypt_block};
 use merkle_tree::{insert_root,  build_tree, MerkleTree};
 use ipfs_upload::{upload_to_ipfs, download_file_from_ipfs};
 use blockchain::{Blockchain, return_transaction};
 use image_verification::image_verification;
 use std::path::Path;
+use sha2::Sha256;
+use sha2::Digest;
 use image::{GenericImageView, ImageBuffer, Rgba};
 
 #[tokio::main]
 async fn main() {
     // Define the images to process and their corresponding prefixes
-    let original_image_path = "/Users/shivanshgupta/Documents/Coding Projects/Image-Authentication-Model-in-Rust/image2.jpg";
+    let original_image_path = "../image2.jpg";
     let original_prefix = "original";
-    let deprecated_image_path = "/Users/shivanshgupta/Documents/Coding Projects/Image-Authentication-Model-in-Rust/image3.jpg";
+    let deprecated_image_path = "../image3.jpg";
     let deprecated_prefix = "fake";
-    let block_size = 128;
+    let block_size = 64;
 
     // Process both images
     let leaves_original = process_image(original_image_path, block_size, original_prefix).await;
@@ -54,7 +56,7 @@ async fn main() {
     let restored_image = restore_tampered_blocks(original_image_path, &leaves_original, &ri, block_size).await;
 
     // Save the restored image
-    restored_image.save("/Users/shivanshgupta/Documents/Coding Projects/Image-Authentication-Model-in-Rust/image4.png").expect("Failed to save restored image");
+    restored_image.save("../image4.jpg").expect("Failed to save restored image");
 }
 
 // Function to process an image: extract MSB, slice into blocks, encrypt, upload to IPFS, and collect hashes
@@ -64,6 +66,9 @@ async fn process_image(image_path: &str, block_size: u32, prefix: &str) -> Vec<S
 
     // Break the image into blocks
     let blocks = slice_image_into_blocks(&msb_img, block_size);
+
+    //save blocks
+    save_blocks(blocks.clone(),prefix);
 
     // Encrypt each block and save to file with the given prefix
     encrypt_and_save_blocks(&blocks, prefix);
@@ -75,6 +80,14 @@ async fn process_image(image_path: &str, block_size: u32, prefix: &str) -> Vec<S
     for i in 0..blocks.len() {
         let file_name = format!("{}_block_{}.enc", prefix, i + 1);
         let file_path = Path::new(&file_name);
+
+        // Read the encrypted block file and print its hash
+        let encrypted_block = std::fs::read(file_path).expect("Failed to read encrypted block file");
+        let mut hasher = Sha256::new();
+        hasher.update(&encrypted_block);
+        let block_hash = hasher.finalize();
+        println!("Block {}: File hash before upload: {}", i + 1, hex::encode(block_hash));
+
         match upload_to_ipfs(file_path).await {
             Ok(hash) => {
                 println!("Uploaded to IPFS with Block_no and Hash {}: {}", i + 1, hash);
