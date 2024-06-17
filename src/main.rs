@@ -9,7 +9,7 @@ mod image_verification;
 use image_to_msb::{extract_msb, convert_msb_to_normal};
 use image_to_chunks::slice_image_into_blocks;
 use block_encryption::{encrypt_and_save_blocks, decrypt_block};
-use merkle_tree::{insert_root, build_fake_tree, build_original_tree, MerkleTree};
+use merkle_tree::{insert_root,  build_tree, MerkleTree};
 use ipfs_upload::{upload_to_ipfs, download_file_from_ipfs};
 use blockchain::{Blockchain, return_transaction};
 use image_verification::image_verification;
@@ -36,7 +36,7 @@ async fn main() {
     insert_root(leaves_original.clone(), &mut blockchain);
 
     // Calculate fake merkle tree and return it
-    let fake_merkle_tree = build_fake_tree(leaves_fake);
+    let fake_merkle_tree = build_tree(leaves_fake);
 
     // Get the transaction of the block by calculating the hash of the header
     let last_block_hash = blockchain::calculate_hash(&blockchain.chain.last().unwrap().header);
@@ -45,16 +45,16 @@ async fn main() {
     let original_transactions = return_transaction(&blockchain, &last_block_hash);
 
     // Merkle tree from original leaves
-    let original_merkle_tree = build_original_tree(original_transactions);
+    let original_merkle_tree = build_tree(original_transactions);
 
     // Perform image verification and get the `ri` array
     let ri = image_verification(fake_merkle_tree, original_merkle_tree);
 
     // Restore the tampered blocks
-    let restored_image = restore_tampered_blocks(original_image_path, &leaves_original, &ri, block_size).await;
+    // let restored_image = restore_tampered_blocks(original_image_path, &leaves_original, &ri, block_size).await;
 
-    // Save the restored image
-    restored_image.save("/Users/shivanshgupta/Documents/Coding Projects/Image-Authentication-Model-in-Rust/image4.png").expect("Failed to save restored image");
+    // // Save the restored image
+    // restored_image.save("/Users/shivanshgupta/Documents/Coding Projects/Image-Authentication-Model-in-Rust/image4.png").expect("Failed to save restored image");
 }
 
 // Function to process an image: extract MSB, slice into blocks, encrypt, upload to IPFS, and collect hashes

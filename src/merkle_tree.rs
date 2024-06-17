@@ -129,49 +129,46 @@ impl MerkleTree {
     }
 }
 
-fn compare_nodes(node1: &Option<Node>, node2: &Option<Node>, ri: &mut Vec<u32>) {
-    match (node1, node2) {
-        (Some(n1), Some(n2)) => {
-            if n1.hash != n2.hash {
-                if n1.left.is_none() && n1.right.is_none() && n2.left.is_none() && n2.right.is_none() {
-                    // Both nodes are leaves
-                    ri.push(1);
-                } else {
-                    // Recursively compare children
-                    compare_nodes(&n1.left.as_deref().cloned(), &n2.left.as_deref().cloned(), ri);
-                    compare_nodes(&n1.right.as_deref().cloned(), &n2.right.as_deref().cloned(), ri);
-                }
-            } else if n1.left.is_none() && n1.right.is_none() && n2.left.is_none() && n2.right.is_none() {
-                ri.extend(vec![0; n1.num_leaves]);
+//-------------------------------------------------------------------- MERKLE TREE COMPARISON: START --------------------------------------------------------------------
+
+pub fn compare_merkle_trees(tree1: &MerkleTree, tree2: &MerkleTree) -> Vec<u32> {
+    let mut result = Vec::new();
+    if let (Some(root1), Some(root2)) = (&tree1.root, &tree2.root) {
+        compare_nodes_merkle(root1, root2, &mut result);
+    }
+    result
+}
+
+fn compare_nodes_merkle(node1: &Node, node2: &Node, result: &mut Vec<u32>) {
+    if node1.hash == node2.hash {
+        // If nodes match, their leaves match
+        for _ in 0..node1.num_leaves {
+            result.push(0);
+        }
+    } else {
+        // If nodes do not match, compare their children
+        match (&node1.left, &node1.right, &node2.left, &node2.right) {
+            (Some(left1), Some(right1), Some(left2), Some(right2)) => {
+                compare_nodes_merkle(left1, left2, result);
+                compare_nodes_merkle(right1, right2, result);
             }
-            else if n1.left.is_some() && n1.right.is_some() && n2.left.is_some() && n2.right.is_some(){
-                ri.extend(vec![0; n1.num_leaves]);
+            (Some(left1), None, Some(left2), None) => {
+                compare_nodes_merkle(left1, left2, result);
+            }
+            (None, Some(right1), None, Some(right2)) => {
+                compare_nodes_merkle(right1, right2, result);
+            }
+            _ => {
+                // Handle cases where tree structures do not match
+                for _ in 0..node1.num_leaves.max(node2.num_leaves) {
+                    result.push(1);
+                }
             }
         }
-        _ => {}
     }
 }
+//-------------------------------------------------------------------- MERKLE TREE COMPARISON: END --------------------------------------------------------------------
 
-pub fn ri_array(original_merkle: &MerkleTree, fake_merkle: &MerkleTree) -> Vec<u32> {
-    let mut ri = Vec::new();
-    
-    // Check if the root hashes match
-    let roots_match = original_merkle.root_hex() == fake_merkle.root_hex();
-    
-    // If roots match, populate ri with 0s only for leaf nodes
-    if roots_match {
-        original_merkle.traverse(&mut |node| {
-            if node.left.is_none() && node.right.is_none() {
-                ri.push(0);
-            }
-        });
-    } else {
-        // If roots don't match, perform comparison as before
-        compare_nodes(&original_merkle.root, &fake_merkle.root, &mut ri);
-    }
-
-    ri
-}
 
 pub fn insert_root(leaves_original: Vec<String>, blockchain: &mut Blockchain) {
     let leaves_as_str_original: Vec<&str> = leaves_original.iter().map(|s| s.as_str()).collect();
@@ -189,14 +186,10 @@ pub fn insert_root(leaves_original: Vec<String>, blockchain: &mut Blockchain) {
     }
 }
 
-pub fn build_original_tree(leaves_original: Vec<String>) -> MerkleTree {
+pub fn build_tree(leaves_original: Vec<String>) -> MerkleTree {
     let leaves_as_str_original: Vec<&str> = leaves_original.iter().map(|s| s.as_str()).collect();
     let merkle_tree = MerkleTree::new(leaves_as_str_original.clone());
     merkle_tree
 }
 
-pub fn build_fake_tree(leaves_fake: Vec<String>) -> MerkleTree {
-    let leaves_as_str_fake: Vec<&str> = leaves_fake.iter().map(|s| s.as_str()).collect();
-    let fake_merkle_tree = MerkleTree::new(leaves_as_str_fake.clone());
-    fake_merkle_tree
-}
+
