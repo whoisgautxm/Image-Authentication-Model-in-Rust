@@ -6,7 +6,7 @@ mod merkle_tree;
 mod blockchain;
 mod image_verification;
 
-use image_to_msb::extract_msb;
+use image_to_msb::{extract_msb, convert_msb_to_normal};
 use image_to_chunks::slice_image_into_blocks;
 use block_encryption::{encrypt_and_save_blocks, decrypt_block};
 use merkle_tree::{insert_root, build_fake_tree, build_original_tree, MerkleTree};
@@ -19,11 +19,11 @@ use image::{GenericImageView, ImageBuffer, Rgba};
 #[tokio::main]
 async fn main() {
     // Define the images to process and their corresponding prefixes
-    let original_image_path = "../image2.jpg";
+    let original_image_path = "/Users/shivanshgupta/Documents/Coding Projects/Image-Authentication-Model-in-Rust/image2.jpg";
     let original_prefix = "original";
-    let deprecated_image_path = "../image3.jpg";
+    let deprecated_image_path = "/Users/shivanshgupta/Documents/Coding Projects/Image-Authentication-Model-in-Rust/image3.jpg";
     let deprecated_prefix = "fake";
-    let block_size = 16;
+    let block_size = 128;
 
     // Process both images
     let leaves_original = process_image(original_image_path, block_size, original_prefix).await;
@@ -54,7 +54,7 @@ async fn main() {
     let restored_image = restore_tampered_blocks(original_image_path, &leaves_original, &ri, block_size).await;
 
     // Save the restored image
-    restored_image.save("../image4.jpg").expect("Failed to save restored image");
+    restored_image.save("/Users/shivanshgupta/Documents/Coding Projects/Image-Authentication-Model-in-Rust/image4.png").expect("Failed to save restored image");
 }
 
 // Function to process an image: extract MSB, slice into blocks, encrypt, upload to IPFS, and collect hashes
@@ -107,11 +107,32 @@ async fn restore_tampered_blocks(original_image_path: &str, leaves_original: &[S
         let y = (i as u32 / (width / block_size)) * block_size;
 
         if r == 1 {
+            let tx_hash = &leaves_original[i];
+
+            // Download and decrypt the file from IPFS
+            let encrypted_block = download_file_from_ipfs(tx_hash).await.expect("Failed to download from IPFS");
+            
+            let decrypted_block = decrypt_block(&encrypted_block, block_size);
+            
+            // Save decrypted block for debugging
+            let file_name = format!("Decrypted_block_MSB{}.png", i + 1);
+            decrypted_block.save(&file_name).expect("Failed to save decrypted block");
+
+            // restore original format image from msb_image
+            let  original_decrypted_block = convert_msb_to_normal(&decrypted_block);
+
+            let file_name = format!("Decrypted_block_{}.png", i + 1);
+            original_decrypted_block.save(&file_name).expect("Failed to save decrypted block");
+
+            let x = (i as u32 % (width / block_size)) * block_size;
+            let y = (i as u32 / (width / block_size)) * block_size;
+
             // Fill the block with transparent red
             for by in 0..block_size {
                 for bx in 0..block_size {
                     if x + bx < width && y + by < height {
-                        restored_image.put_pixel(x + bx, y + by, transparent_red);
+                        let pixel = original_decrypted_block.get_pixel(bx, by);
+                        restored_image.put_pixel(x + bx, y + by, *pixel);
                     }
                 }
             }
@@ -130,3 +151,8 @@ async fn restore_tampered_blocks(original_image_path: &str, leaves_original: &[S
 
     restored_image
 }
+
+// fn main(){
+//     let msb_img = extract_msb("/Users/shivanshgupta/Documents/Coding Projects/Image-Authentication-Model-in-Rust/image2.jpg");
+//     let original_image= convert_msb_to_normal(&msb_img);
+// }

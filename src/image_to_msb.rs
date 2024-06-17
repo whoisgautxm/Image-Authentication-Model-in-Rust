@@ -28,6 +28,35 @@ pub fn extract_msb(img_path: &str) -> ImageBuffer<Rgba<u8>, Vec<u8>> {
         // Put the new pixel into the MSB image buffer
         msb_img.put_pixel(x, y, msb_pixel);
     }
-    msb_img.save("../msb_image.jpeg");
+    msb_img.save("/Users/shivanshgupta/Documents/Coding Projects/Image-Authentication-Model-in-Rust/msb_img.jpg");
     msb_img
+}
+
+
+pub fn convert_msb_to_normal(msb_img: &ImageBuffer<Rgba<u8>, Vec<u8>>) -> ImageBuffer<Rgba<u8>, Vec<u8>> {
+    // Get the dimensions of the MSB image
+    let (width, height) = msb_img.dimensions();
+
+    // Create a new image buffer to store the approximated normal image
+    let mut normal_img = ImageBuffer::new(width, height);
+
+    // Iterate over each pixel
+    for (x, y, pixel) in msb_img.enumerate_pixels() {
+        // Extract the MSB values (assuming the MSB image is in RGBA format)
+        let rgba = pixel.0;
+
+        // Reconstruct the original color channels using the MSB
+        // Here, we assume a middle value for the lower 7 bits (e.g., 64)
+        let r = if rgba[0] == 255 { 128 + 64 } else { 64 };
+        let g = if rgba[1] == 255 { 128 + 64 } else { 64 };
+        let b = if rgba[2] == 255 { 128 + 64 } else { 64 };
+
+        // Create a new pixel with the reconstructed values
+        let normal_pixel = Rgba([r, g, b, 255]);
+
+        // Put the new pixel into the normal image buffer
+        normal_img.put_pixel(x, y, normal_pixel);
+    }
+    normal_img.save("/Users/shivanshgupta/Documents/Coding Projects/Image-Authentication-Model-in-Rust/normal_img.jpg");
+    normal_img
 }
