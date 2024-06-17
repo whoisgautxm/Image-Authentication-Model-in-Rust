@@ -51,10 +51,10 @@ async fn main() {
     let ri = image_verification(fake_merkle_tree, original_merkle_tree);
 
     // Restore the tampered blocks
-    // let restored_image = restore_tampered_blocks(original_image_path, &leaves_original, &ri, block_size).await;
+    let restored_image = restore_tampered_blocks(original_image_path, &leaves_original, &ri, block_size).await;
 
-    // // Save the restored image
-    // restored_image.save("/Users/shivanshgupta/Documents/Coding Projects/Image-Authentication-Model-in-Rust/image4.png").expect("Failed to save restored image");
+    // Save the restored image
+    restored_image.save("/Users/shivanshgupta/Documents/Coding Projects/Image-Authentication-Model-in-Rust/image4.png").expect("Failed to save restored image");
 }
 
 // Function to process an image: extract MSB, slice into blocks, encrypt, upload to IPFS, and collect hashes
