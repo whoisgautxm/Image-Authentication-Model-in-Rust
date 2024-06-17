@@ -21,11 +21,11 @@ use image::{GenericImageView, ImageBuffer, Rgba};
 #[tokio::main]
 async fn main() {
     // Define the images to process and their corresponding prefixes
-    let original_image_path = "../image2.jpg";
+    let original_image_path = "Path of the original image";
     let original_prefix = "original";
-    let deprecated_image_path = "../image3.jpg";
+    let deprecated_image_path = "Path of the image with tampered blocks";
     let deprecated_prefix = "fake";
-    let block_size = 64;
+    let block_size = "Size of the block";
 
     // Process both images
     let leaves_original = process_image(original_image_path, block_size, original_prefix).await;
@@ -56,7 +56,7 @@ async fn main() {
     let restored_image = restore_tampered_blocks(original_image_path, &leaves_original, &ri, block_size).await;
 
     // Save the restored image
-    restored_image.save("../image4.jpg").expect("Failed to save restored image");
+    restored_image.save("Path of the restored image").expect("Failed to save restored image");
 }
 
 // Function to process an image: extract MSB, slice into blocks, encrypt, upload to IPFS, and collect hashes
@@ -144,8 +144,8 @@ async fn restore_tampered_blocks(original_image_path: &str, leaves_original: &[S
             for by in 0..block_size {
                 for bx in 0..block_size {
                     if x + bx < width && y + by < height {
-                        let pixel = original_decrypted_block.get_pixel(bx, by);
-                        restored_image.put_pixel(x + bx, y + by, *pixel);
+                        // let pixel = original_decrypted_block.get_pixel(bx, by);
+                        restored_image.put_pixel(x + bx, y + by, transparent_red.into());
                     }
                 }
             }
@@ -164,8 +164,3 @@ async fn restore_tampered_blocks(original_image_path: &str, leaves_original: &[S
 
     restored_image
 }
-
-// fn main(){
-//     let msb_img = extract_msb("/Users/shivanshgupta/Documents/Coding Projects/Image-Authentication-Model-in-Rust/image2.jpg");
-//     let original_image= convert_msb_to_normal(&msb_img);
-// }

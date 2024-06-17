@@ -2,12 +2,12 @@
 
 <div align="center">
   <a href="https://github.com/mfts/papermark/stargazers"><img alt="GitHub Repo stars" src="https://img.shields.io/github/stars/whoisgautxm/Image-Authentication-Model-in-Rust"></a>
- 
   <a href="https://github.com/whoisgautxm/Image-Authentication-Model-in-Rust/blob/main/LICENSE"><img alt="License" src="https://img.shields.io/badge/license-MIT-red"></a>
-
+    <h3>🌟🌟Contributors🌟🌟</h3>
   <a href="https://github.com/whoisgautxm/Image-Authentication-Model-in-Rust/graphs/contributors">
   <img src="https://contrib.rocks/image?repo=whoisgautxm/Image-Authentication-Model-in-Rust" />
 </a>
+<h4>🔔 This project needs modification and not production ready.</h4>
 </div>
 
 
@@ -37,8 +37,8 @@ This project implements an image authentication scheme using Merkle tree mechani
 
 1. **Clone the repository**:
     ```sh
-    git clone https://github.com/your-username/your-repo-name.git
-    cd your-repo-name
+    git clone https://github.com/whoisgautxm/Image-Authentication-Model-in-Rust.git
+    cd Image-Authentication-Model-in-Rust
     ```
 
 2. **Install Rust**:
@@ -69,6 +69,8 @@ This project implements an image authentication scheme using Merkle tree mechani
     - This tree is compared with the original image's Merkle tree from the blockchain to verify integrity and identify tampered areas.
 
 ## Detailed Workflow
+
+![alt text](model.png)
 
 1. **Image Processing**:
     - Extract the k Most Significant Bits (MSBs) of each pixel.
